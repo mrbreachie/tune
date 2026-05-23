@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OW Hero Tools</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ======= SITE HEADER / NAV ======= -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="#" class="logo" onclick="showPage('selector'); return false;">
+        <span class="logo-icon">⚔</span>
+        <span class="logo-text">OW<span class="logo-accent">Tools</span></span>
+      </a>
+      <nav class="main-nav" aria-label="Main navigation">
+        <button class="nav-btn active" data-page="selector" onclick="showPage('selector')">Hero Selector</button>
+        <button class="nav-btn" data-page="counters" onclick="showPage('counters')">Counters</button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main-content">
+
+    <!-- ====================== PAGE: HERO SELECTOR ====================== -->
+    <section id="page-selector" class="page active" aria-label="Random Hero Selector">
+
+      <div class="page-hero">
+        <h1 class="page-title">Random<br /><em>Hero</em> Selector</h1>
+        <p class="page-subtitle">Roll heroes for your whole squad. Perks optional.</p>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls-panel">
+        <div class="control-group">
+          <label class="control-label" for="player-count">Players</label>
+          <div class="stepper" role="group" aria-label="Number of players">
+            <button class="stepper-btn" id="dec-players" aria-label="Decrease players" onclick="changePlayerCount(-1)">−</button>
+            <output class="stepper-val" id="player-count" aria-live="polite">5</output>
+            <button class="stepper-btn" id="inc-players" aria-label="Increase players" onclick="changePlayerCount(1)">+</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" for="role-filter">Role</label>
+          <select class="control-select" id="role-filter" onchange="applyFilters()">
+            <option value="all">All Roles</option>
+            <option value="Tank">Tank</option>
+            <option value="Damage">Damage</option>
+            <option value="Support">Support</option>
+          </select>
+        </div>
+
+        <div class="control-group toggle-group">
+          <label class="control-label" for="perks-toggle">Random Perks</label>
+          <button
+            class="toggle-btn"
+            id="perks-toggle"
+            role="switch"
+            aria-checked="false"
+            onclick="togglePerks()"
+            aria-label="Toggle random perks"
+          >
+            <span class="toggle-knob"></span>
+          </button>
+        </div>
+
+        <div class="control-group toggle-group">
+          <label class="control-label" for="unique-toggle">Unique Heroes</label>
+          <button
+            class="toggle-btn"
+            id="unique-toggle"
+            role="switch"
+            aria-checked="true"
+            onclick="toggleUnique()"
+            aria-label="Toggle unique heroes only"
+          >
+            <span class="toggle-knob"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Roll button -->
+      <div class="roll-wrap">
+        <button class="roll-btn" id="roll-btn" onclick="rollHeroes()" aria-label="Roll random heroes">
+          <span class="roll-btn-text">Roll Heroes</span>
+          <span class="roll-btn-icon" aria-hidden="true">🎲</span>
+        </button>
+      </div>
+
+      <!-- Results -->
+      <section id="results-section" class="results-section" aria-label="Rolled hero results" aria-live="polite">
+        <div class="results-grid" id="results-grid"></div>
+      </section>
+
+    </section>
+
+    <!-- ====================== PAGE: COUNTERS ====================== -->
+    <section id="page-counters" class="page" aria-label="Hero Counter Guide">
+
+      <div class="page-hero">
+        <h1 class="page-title">Hero<br /><em>Counters</em></h1>
+        <p class="page-subtitle">Select a hero to see their matchups.</p>
+      </div>
+
+      <div class="counters-controls">
+        <div class="search-wrap">
+          <label class="sr-only" for="hero-search">Search heroes</label>
+          <span class="search-icon" aria-hidden="true">🔍</span>
+          <input type="search" id="hero-search" class="hero-search" placeholder="Search heroes…" oninput="filterCounterHeroes()" />
+        </div>
+
+        <div class="role-tabs" role="group" aria-label="Filter by role">
+          <button class="role-tab active" data-role="all" onclick="setCounterRole('all', this)">All</button>
+          <button class="role-tab" data-role="Tank" onclick="setCounterRole('Tank', this)">Tank</button>
+          <button class="role-tab" data-role="Damage" onclick="setCounterRole('Damage', this)">Damage</button>
+          <button class="role-tab" data-role="Support" onclick="setCounterRole('Support', this)">Support</button>
+        </div>
+      </div>
+
+      <div class="hero-grid-wrap">
+        <ul class="counter-hero-grid" id="counter-hero-grid" role="list" aria-label="Hero list"></ul>
+      </div>
+
+      <aside id="counter-detail" class="counter-detail" aria-label="Hero counter details" aria-live="polite"></aside>
+
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>Fan-made tool. Not affiliated with Blizzard Entertainment.</p>
+  </footer>
+
+  <!-- Bottom tab bar (mobile only, shown via CSS) -->
+  <nav class="bottom-nav" aria-label="Mobile navigation">
+    <div class="bottom-nav-inner">
+      <button class="tab-btn active" data-page="selector" onclick="showPage('selector')" aria-label="Hero Selector">
+        <span class="tab-icon" aria-hidden="true">🎲</span>
+        <span>Selector</span>
+      </button>
+      <button class="tab-btn" data-page="counters" onclick="showPage('counters')" aria-label="Hero Counters">
+        <span class="tab-icon" aria-hidden="true">⚔️</span>
+        <span>Counters</span>
+      </button>
+    </div>
+  </nav>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

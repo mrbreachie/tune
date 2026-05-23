@@ -1,157 +1,276 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OW Hero Tools</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FH6 Tune — Forza Horizon 6 Tune Calculator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Car search field */
+    #car-name {
+      background: var(--surface3);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'Barlow', sans-serif;
+      font-size: 13px;
+      padding: 7px 10px;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    #car-name:focus { border-color: var(--accent); }
+    .car-search-wrap { position: relative; }
+
+    /* Autocomplete dropdown */
+    #car-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 3px);
+      left: 0;
+      right: 0;
+      background: var(--surface3);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      z-index: 100;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+    #car-dropdown::-webkit-scrollbar { width: 3px; }
+    #car-dropdown::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+    .ac-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+      gap: 8px;
+    }
+    .ac-item:last-child { border-bottom: none; }
+    .ac-item:hover, .ac-item.active { background: var(--surface2); }
+    .ac-name { font-size: 12px; color: var(--text); flex: 1; }
+    .ac-name strong { color: var(--accent); font-weight: 600; }
+    .ac-meta { font-size: 10px; color: var(--muted); font-family: 'Barlow Condensed', sans-serif; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+
+    /* prefill notice */
+    .prefill-note {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 4px;
+      letter-spacing: 0.02em;
+    }
+    .prefill-note span { color: var(--accent); }
+  </style>
 </head>
 <body>
 
-  <!-- ======= SITE HEADER / NAV ======= -->
-  <header class="site-header">
-    <div class="header-inner">
-      <a href="#" class="logo" onclick="showPage('selector'); return false;">
-        <span class="logo-icon">⚔</span>
-        <span class="logo-text">OW<span class="logo-accent">Tools</span></span>
-      </a>
-      <nav class="main-nav" aria-label="Main navigation">
-        <button class="nav-btn active" data-page="selector" onclick="showPage('selector')">Hero Selector</button>
-        <button class="nav-btn" data-page="counters" onclick="showPage('counters')">Counters</button>
-      </nav>
-    </div>
-  </header>
+<header>
+  <div class="logo">FH6 <span>TUNE</span></div>
+  <div class="unit-toggle">
+    <button class="active" onclick="setUnit('imperial')" id="btn-imperial">Imperial</button>
+    <button onclick="setUnit('metric')" id="btn-metric">Metric</button>
+  </div>
+</header>
 
-  <main id="main-content">
+<div class="app">
 
-    <!-- ====================== PAGE: HERO SELECTOR ====================== -->
-    <section id="page-selector" class="page active" aria-label="Random Hero Selector">
+  <!-- LEFT: INPUTS -->
+  <div class="panel-left" id="panel-left">
 
-      <div class="page-hero">
-        <h1 class="page-title">Random<br /><em>Hero</em> Selector</h1>
-        <p class="page-subtitle">Roll heroes for your whole squad. Perks optional.</p>
-      </div>
-
-      <!-- Controls -->
-      <div class="controls-panel">
-        <div class="control-group">
-          <label class="control-label" for="player-count">Players</label>
-          <div class="stepper" role="group" aria-label="Number of players">
-            <button class="stepper-btn" id="dec-players" aria-label="Decrease players" onclick="changePlayerCount(-1)">−</button>
-            <output class="stepper-val" id="player-count" aria-live="polite">5</output>
-            <button class="stepper-btn" id="inc-players" aria-label="Increase players" onclick="changePlayerCount(1)">+</button>
-          </div>
+    <!-- Car Basics -->
+    <div class="section">
+      <div class="section-title">Car Details</div>
+      <div class="field">
+        <label>Car</label>
+        <div class="car-search-wrap">
+          <input type="text" id="car-name" placeholder="Search FH6 cars..." autocomplete="off">
+          <div id="car-dropdown"></div>
         </div>
-
-        <div class="control-group">
-          <label class="control-label" for="role-filter">Role</label>
-          <select class="control-select" id="role-filter" onchange="applyFilters()">
-            <option value="all">All Roles</option>
-            <option value="Tank">Tank</option>
-            <option value="Damage">Damage</option>
-            <option value="Support">Support</option>
+        <div class="prefill-note">Select a car to <span>prefill stats</span> — all fields stay editable</div>
+      </div>
+      <div class="field">
+        <label>Drivetrain</label>
+        <div class="drive-toggle">
+          <button onclick="setDrive('FWD')" id="d-FWD">FWD</button>
+          <button onclick="setDrive('RWD')" id="d-RWD" class="active">RWD</button>
+          <button onclick="setDrive('AWD')" id="d-AWD">AWD</button>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label id="lbl-weight">Weight (lbs)</label>
+          <input type="number" id="weight" placeholder="3200" min="500" max="8000">
+        </div>
+        <div class="field">
+          <label>Weight Dist % Front</label>
+          <input type="number" id="wdist" placeholder="50" min="20" max="80">
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label id="lbl-power">Power (hp)</label>
+          <input type="number" id="power" placeholder="400" min="50" max="2500">
+        </div>
+        <div class="field">
+          <label>PI Class</label>
+          <select id="pi-class">
+            <option value="D">D (100–399)</option>
+            <option value="C">C (400–499)</option>
+            <option value="B">B (500–599)</option>
+            <option value="A" selected>A (600–699)</option>
+            <option value="S1">S1 (700–799)</option>
+            <option value="S2">S2 (800–899)</option>
+            <option value="R">R (900–999)</option>
+            <option value="X">X (900+)</option>
           </select>
         </div>
-
-        <div class="control-group toggle-group">
-          <label class="control-label" for="perks-toggle">Random Perks</label>
-          <button
-            class="toggle-btn"
-            id="perks-toggle"
-            role="switch"
-            aria-checked="false"
-            onclick="togglePerks()"
-            aria-label="Toggle random perks"
-          >
-            <span class="toggle-knob"></span>
-          </button>
-        </div>
-
-        <div class="control-group toggle-group">
-          <label class="control-label" for="unique-toggle">Unique Heroes</label>
-          <button
-            class="toggle-btn"
-            id="unique-toggle"
-            role="switch"
-            aria-checked="true"
-            onclick="toggleUnique()"
-            aria-label="Toggle unique heroes only"
-          >
-            <span class="toggle-knob"></span>
-          </button>
-        </div>
       </div>
-
-      <!-- Roll button -->
-      <div class="roll-wrap">
-        <button class="roll-btn" id="roll-btn" onclick="rollHeroes()" aria-label="Roll random heroes">
-          <span class="roll-btn-text">Roll Heroes</span>
-          <span class="roll-btn-icon" aria-hidden="true">🎲</span>
-        </button>
-      </div>
-
-      <!-- Results -->
-      <section id="results-section" class="results-section" aria-label="Rolled hero results" aria-live="polite">
-        <div class="results-grid" id="results-grid"></div>
-      </section>
-
-    </section>
-
-    <!-- ====================== PAGE: COUNTERS ====================== -->
-    <section id="page-counters" class="page" aria-label="Hero Counter Guide">
-
-      <div class="page-hero">
-        <h1 class="page-title">Hero<br /><em>Counters</em></h1>
-        <p class="page-subtitle">Select a hero to see their matchups.</p>
-      </div>
-
-      <div class="counters-controls">
-        <div class="search-wrap">
-          <label class="sr-only" for="hero-search">Search heroes</label>
-          <span class="search-icon" aria-hidden="true">🔍</span>
-          <input type="search" id="hero-search" class="hero-search" placeholder="Search heroes…" oninput="filterCounterHeroes()" />
-        </div>
-
-        <div class="role-tabs" role="group" aria-label="Filter by role">
-          <button class="role-tab active" data-role="all" onclick="setCounterRole('all', this)">All</button>
-          <button class="role-tab" data-role="Tank" onclick="setCounterRole('Tank', this)">Tank</button>
-          <button class="role-tab" data-role="Damage" onclick="setCounterRole('Damage', this)">Damage</button>
-          <button class="role-tab" data-role="Support" onclick="setCounterRole('Support', this)">Support</button>
-        </div>
-      </div>
-
-      <div class="hero-grid-wrap">
-        <ul class="counter-hero-grid" id="counter-hero-grid" role="list" aria-label="Hero list"></ul>
-      </div>
-
-      <aside id="counter-detail" class="counter-detail" aria-label="Hero counter details" aria-live="polite"></aside>
-
-    </section>
-
-  </main>
-
-  <footer class="site-footer">
-    <p>Fan-made tool. Not affiliated with Blizzard Entertainment.</p>
-  </footer>
-
-  <!-- Bottom tab bar (mobile only, shown via CSS) -->
-  <nav class="bottom-nav" aria-label="Mobile navigation">
-    <div class="bottom-nav-inner">
-      <button class="tab-btn active" data-page="selector" onclick="showPage('selector')" aria-label="Hero Selector">
-        <span class="tab-icon" aria-hidden="true">🎲</span>
-        <span>Selector</span>
-      </button>
-      <button class="tab-btn" data-page="counters" onclick="showPage('counters')" aria-label="Hero Counters">
-        <span class="tab-icon" aria-hidden="true">⚔️</span>
-        <span>Counters</span>
-      </button>
     </div>
-  </nav>
 
-  <script src="data.js"></script>
-  <script src="app.js"></script>
+    <!-- Build -->
+    <div class="section">
+      <div class="section-title">Build</div>
+      <div class="two-col">
+        <div class="field">
+          <label>Tire Compound</label>
+          <select id="tire-compound">
+            <option value="street">Street</option>
+            <option value="sport" selected>Sport</option>
+            <option value="semi">Semi-Slick</option>
+            <option value="race">Race Slick</option>
+            <option value="rally">Rally</option>
+            <option value="offroad">Off-road</option>
+            <option value="drift">Drift</option>
+            <option value="drag">Drag</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Suspension</label>
+          <select id="suspension">
+            <option value="race" selected>Race</option>
+            <option value="rally">Rally</option>
+            <option value="offroad">Off-road</option>
+            <option value="drift">Drift</option>
+          </select>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label id="lbl-ftire">Front Tire (mm)</label>
+          <input type="number" id="front-tire" placeholder="245" min="100" max="400">
+        </div>
+        <div class="field">
+          <label id="lbl-rtire">Rear Tire (mm)</label>
+          <input type="number" id="rear-tire" placeholder="275" min="100" max="400">
+        </div>
+      </div>
+      <div class="field">
+        <label>Aero</label>
+        <select id="aero">
+          <option value="both" selected>Front + Rear</option>
+          <option value="rear">Rear only</option>
+          <option value="front">Front only</option>
+          <option value="none">None</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Gearing -->
+    <div class="section">
+      <div class="section-title">Gearing</div>
+      <div class="two-col">
+        <div class="field">
+          <label>Max RPM (redline)</label>
+          <input type="number" id="max-rpm" placeholder="8000" min="3000" max="15000">
+        </div>
+        <div class="field">
+          <label>Peak Power RPM</label>
+          <input type="number" id="peak-rpm" placeholder="6500" min="2000" max="14000">
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label>Transmission</label>
+          <select id="trans">
+            <option value="stock">Stock</option>
+            <option value="sport">Sport (FD only)</option>
+            <option value="race" selected>Race (all gears)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Gear Count</label>
+          <select id="gears">
+            <option value="5">5-speed</option>
+            <option value="6" selected>6-speed</option>
+            <option value="7">7-speed</option>
+            <option value="8">8-speed</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label id="lbl-topspeed">Target Top Speed (mph, opt.)</label>
+        <input type="number" id="top-speed" placeholder="175" min="60" max="300">
+      </div>
+    </div>
+
+    <!-- Discipline -->
+    <div class="section">
+      <div class="section-title">Discipline</div>
+      <div class="disc-toggle" id="disc-toggle">
+        <button class="active" onclick="setDisc('road')">Road</button>
+        <button onclick="setDisc('touge')">Touge</button>
+        <button onclick="setDisc('rally')">Rally</button>
+        <button onclick="setDisc('offroad')">Off-road</button>
+        <button onclick="setDisc('drag')">Drag</button>
+        <button onclick="setDisc('drift')">Drift</button>
+      </div>
+    </div>
+
+    <!-- Driving Preferences -->
+    <div class="section">
+      <div class="section-title">Driving Preferences</div>
+      <div class="pref-slider">
+        <div class="pref-row"><span class="pref-label">Balance Bias</span><span class="pref-val" id="v-balance">0</span></div>
+        <input type="range" min="-5" max="5" value="0" step="1" id="s-balance" oninput="updatePref('balance',this.value)">
+        <div class="pref-ends"><span>Understeer</span><span>Oversteer</span></div>
+      </div>
+      <div class="pref-slider">
+        <div class="pref-row"><span class="pref-label">Suspension Feel</span><span class="pref-val" id="v-stiff">0</span></div>
+        <input type="range" min="-5" max="5" value="0" step="1" id="s-stiff" oninput="updatePref('stiff',this.value)">
+        <div class="pref-ends"><span>Softer</span><span>Stiffer</span></div>
+      </div>
+      <div class="pref-slider">
+        <div class="pref-row"><span class="pref-label">Gearing Focus</span><span class="pref-val" id="v-gearing">0</span></div>
+        <input type="range" min="-5" max="5" value="0" step="1" id="s-gearing" oninput="updatePref('gearing',this.value)">
+        <div class="pref-ends"><span>Acceleration</span><span>Top Speed</span></div>
+      </div>
+      <div class="pref-slider">
+        <div class="pref-row"><span class="pref-label">Brake Aggression</span><span class="pref-val" id="v-brake">0</span></div>
+        <input type="range" min="-5" max="5" value="0" step="1" id="s-brake" oninput="updatePref('brake',this.value)">
+        <div class="pref-ends"><span>Softer</span><span>More Bite</span></div>
+      </div>
+    </div>
+
+    <button class="gen-btn" onclick="generateTune()">Generate Tune ▶</button>
+
+  </div>
+
+  <!-- RIGHT: OUTPUT -->
+  <div class="panel-right" id="panel-right">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-icon">⚙</div>
+      <div class="empty-title">No tune generated</div>
+      <div class="empty-sub">Search for your car, fill in the details, and hit Generate Tune.</div>
+    </div>
+    <div id="tune-output" style="display:none; flex-direction:column; gap:10px;"></div>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
